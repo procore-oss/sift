@@ -183,6 +183,21 @@ class PostsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [nil, 10, 1, nil], json.map(&:priority)
   end
 
+  test "it can do multiple sorts contrary to the order in which sorts are configured" do
+    Post.create!(title: "a", priority: 1)
+    Post.create!(title: "b", visible: true)
+    Post.create!(title: "f", priority: 10, visible: true)
+    Post.create!(title: "c", priority: 10, visible: false)
+    Post.create!(title: "d", priority: 10)
+
+    get("/posts", params: { sort: "priority,-visible,title" })
+
+    json = JSON.parse(@response.body, object_class: OpenStruct)
+    assert_equal ["b", "a", "f", "c", "d"], json.map(&:title)
+    assert_equal [nil, 1, 10, 10, 10], json.map(&:priority)
+    assert_equal [true, nil, true, false, nil], json.map(&:visible)
+  end
+
   test "it errors on unknown fields" do
     expected_json = { "errors" => { "sort" => ["is not included in the list"] } }
 

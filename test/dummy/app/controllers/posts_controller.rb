@@ -43,6 +43,7 @@ class PostsController < ApplicationController
 
   before_action :render_filter_errors, unless: :filters_valid?
 
+  sort_on :visible, type: :int
   sort_on :title, type: :string
   sort_on :priority, type: :string
   sort_on :foobar, type: :string, internal_name: :title

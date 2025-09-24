@@ -17,7 +17,7 @@ module Sift
     end
 
     def filter
-      active_filters.reduce(collection) do |col, filter|
+      ordered_active_filters.reduce(collection) do |col, filter|
         apply(col, filter)
       end
     end
@@ -33,21 +33,31 @@ module Sift
     end
 
     def active_sorts_hash
-      active_sorts_hash = {}
-      Array(sort).each do |s|
-        if s.starts_with?("-")
-          active_sorts_hash[s[1..-1].to_sym] = :desc
-        else
-          active_sorts_hash[s.to_sym] = :asc
+      @active_sorts_hash ||= begin
+        active_sorts_hash = {}
+        Array(sort).each do |s|
+          if s.starts_with?("-")
+            active_sorts_hash[s[1..-1].to_sym] = :desc
+          else
+            active_sorts_hash[s.to_sym] = :asc
+          end
         end
+        active_sorts_hash
       end
-      active_sorts_hash
     end
 
     def active_filters
       filters.select do |filter|
         filter_params[filter.param].present? || filter.default || filter.always_active?
       end
+    end
+
+    def ordered_active_filters
+      active_filters.sort_by { |filter| sorts_by_index.fetch(filter.param, Float::INFINITY) }
+    end
+
+    def sorts_by_index
+      @sorts_by_index ||= active_sorts_hash.keys.each_with_index.to_h
     end
   end
 end
