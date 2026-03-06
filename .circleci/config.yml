@@ -1,0 +1,17 @@
+version: 2.1
+
+jobs:
+  sonarqube_analysis:
+    docker:
+      - image: cimg/ruby:3.3
+    steps:
+      - checkout
+      - run:
+          name: Skip SonarQube for open source gem
+          command: echo "SonarQube analysis skipped - not configured for this repository"
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - sonarqube_analysis
