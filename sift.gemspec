@@ -10,8 +10,8 @@ Gem::Specification.new do |s|
   s.authors     = ["Procore Technologies"]
   s.email       = ["dev@procore.com"]
   s.homepage    = "https://github.com/procore/sift"
-  s.summary     = "Summary of Sift."
-  s.description = "Easily write arbitrary filters"
+  s.summary     = "Build dynamic filters and sorts for Rails and Active Record"
+  s.description = "A declarative DSL for building filters and sorts with Rails and Active Record"
   s.license     = "MIT"
 
   s.files = Dir["{app,config,db,lib}/**/*",
@@ -21,12 +21,12 @@ Gem::Specification.new do |s|
 
   s.required_ruby_version = ">= 2.7.0"
 
-  s.add_dependency "activerecord", ">= 6.1"
+  s.add_dependency "activerecord", ">= 7.0"
 
   s.add_development_dependency "pry"
-  s.add_development_dependency "rails", ">= 6.1"
+  s.add_development_dependency "rails", ">= 7.0"
   s.add_development_dependency "rake"
-  s.add_development_dependency "rubocop", "0.71.0"
+  s.add_development_dependency "rubocop", "~> 1.68"
   s.add_development_dependency "sqlite3"
   s.add_development_dependency "appraisal"
 end
