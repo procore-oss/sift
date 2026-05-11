@@ -1,5 +1,18 @@
 ## Unreleased
 
+## 1.0.0
+
+- Bump version to 1.0.0, making it an official release
+- Change dependencies to only include `activerecord` as a direct dependency instead of the whole Rails framework
+### Breaking changes:
+- Bump required Ruby version to 2.7
+- Drop support for Rails/ActiveRecord 4 and 5
+- Require `activerecord >= 6.1`
+
+## 0.17.0
+
+- Add support for Rails 7.0
+
 ## 0.16.0
 
 - Adds a `tap` method to `filter_on` to support mutating filter values
