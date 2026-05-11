@@ -1,5 +1,17 @@
 ## Unreleased
 
+## 1.1.0
+
+- Add support for Rails 7.1, 7.2, and 8.0 (#67)
+- Migrate CI from Travis to GitHub Actions; test matrix covers Ruby 2.7–3.3 against Rails 7.0–8.0 (#67)
+- Fix boolean filter being silently skipped when the value is `false` (#58). Note: filters with empty-string values are now applied (previously skipped); review consumers if you relied on the old behavior.
+- Fix `NameError` in JSONB filtering when value is an Array (#56)
+- Reorganize documentation into a `docs/` directory (#68)
+
+### Breaking changes:
+- Drop support for Rails 6.1 / ActiveRecord 6.1
+- Require `activerecord >= 7.0`
+
 ## 1.0.0
 
 - Bump version to 1.0.0, making it an official release
