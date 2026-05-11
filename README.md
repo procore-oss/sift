@@ -1,6 +1,6 @@
 # Sift
 
-[![Build Status](https://travis-ci.org/procore/sift.svg?branch=master)](https://travis-ci.org/procore/sift)
+[![Tests](https://github.com/procore/sift/actions/workflows/test.yml/badge.svg)](https://github.com/procore/sift/actions/workflows/test.yml)
 
 A tool to build your own filters and sorts with Rails and Active Record!
 
