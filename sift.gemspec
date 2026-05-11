@@ -26,6 +26,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency "pry"
   s.add_development_dependency "rails", ">= 7.0"
   s.add_development_dependency "rake"
+  s.add_development_dependency "minitest", "< 6"
   s.add_development_dependency "rubocop", "~> 1.68"
   s.add_development_dependency "sqlite3"
   s.add_development_dependency "appraisal"

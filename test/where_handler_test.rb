@@ -1,9 +1,7 @@
-require "minitest/autorun"
-require "sift/parameter"
-require "sift/where_handler"
+require "test_helper"
 
-class WhereHandlerTest < Minitest::Test
-  def test_it_filters_jsonb_arrays_with_the_full_value
+class WhereHandlerTest < ActiveSupport::TestCase
+  test "it filters jsonb arrays with the full value" do
     param = Sift::Parameter.new(:metadata, :jsonb)
     collection = Minitest::Mock.new
     filtered_collection = Object.new
