@@ -101,7 +101,7 @@ class WhereHandlerTest < ActiveSupport::TestCase
     assert_includes sql, "metadata->>'status' = 'active'"
   end
 
-  def test_it_filters_jsonb_arrays_with_the_full_value
+  test "it filters jsonb arrays with the full value" do
     param = Sift::Parameter.new(:metadata, :jsonb)
     collection = Minitest::Mock.new
     filtered_collection = Object.new
