@@ -100,4 +100,16 @@ class WhereHandlerTest < ActiveSupport::TestCase
     assert_includes sql, "metadata->>'published_at' BETWEEN"
     assert_includes sql, "metadata->>'status' = 'active'"
   end
+
+  def test_it_filters_jsonb_arrays_with_the_full_value
+    param = Sift::Parameter.new(:metadata, :jsonb)
+    collection = Minitest::Mock.new
+    filtered_collection = Object.new
+    collection.expect :where, filtered_collection, ["metadata @> ?", "[1, 2]"]
+
+    result = Sift::WhereHandler.new(param).call(collection, [1, 2], {}, [])
+
+    assert_same filtered_collection, result
+    assert_mock collection
+  end
 end
