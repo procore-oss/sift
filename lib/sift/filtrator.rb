@@ -46,7 +46,7 @@ module Sift
 
     def active_filters
       filters.select do |filter|
-        filter_params[filter.param].present? || filter.default || filter.always_active?
+        filter_params.include?(filter.param) || filter.default || filter.always_active?
       end
     end
   end
