@@ -1,0 +1,9 @@
+repo:
+  - changed-files:
+      - any-glob-to-any-file:
+          - .github/**/*
+          - README.md
+          - .gitignore
+          - .gitattributes
+          - .gitmodules/**/*
+          - LICENSE

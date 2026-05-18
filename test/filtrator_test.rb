@@ -18,6 +18,19 @@ class FiltratorTest < ActiveSupport::TestCase
     assert_equal Post.where(id: post.id), collection
   end
 
+  test "it filters by boolean field even when the value is false" do
+    Post.create!(visible: false)
+    filter = Sift::Filter.new(:visible, :boolean, :visible, nil)
+
+    collection = Sift::Filtrator.filter(
+      Post.all,
+      { filters: { visible: false } },
+      [filter],
+    )
+
+    assert_equal Post.where(visible: false), collection
+  end
+
   test "it will not try to make a range out of a string field that includes ..." do
     post = Post.create!(title: "wow...man")
     filter = Sift::Filter.new(:title, :string, :title, nil)
