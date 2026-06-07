@@ -93,6 +93,8 @@ The following types support ranges:
 - time
 - datetime
 
+Ranges are also supported against individual keys inside a `jsonb` column when the key's type is declared. See [Filter on JSONB Column](#filter-on-jsonb-column).
+
 ## Mutating Filters
 
 Filters can be mutated before the filter is applied using the `tap` argument. This is useful, for example, if you need to adjust the time zone of a `datetime` range filter.
@@ -198,6 +200,43 @@ Will return records with next values stored in the JSONB column `metadata`:
 { data_2: [false] }
 { data_1: {another: 'information'} } # When the JSONB key "data_2" is not set.
 ```
+
+### Range filtering on JSONB keys
+
+A range (`a...b`) can target a key inside a `jsonb` column. Because the value stored in JSONB is text, you must declare the type of each range-capable key using the `keys:` option so Sift can cast the column for an inclusive `BETWEEN` comparison.
+
+```ruby
+filter_on :metadata, type: :jsonb, keys: { price: :decimal }
+```
+
+The range is sent using the same JSON object form as other JSONB filters:
+
+- `?filters[metadata]={"price":"10...100"}`
+
+This emits `(metadata->>'price')::numeric BETWEEN 10 AND 100`.
+
+Supported range key types and their casts:
+
+| Declared type | Postgres cast |
+| ------------- | ------------- |
+| `:int`        | `::integer`     |
+| `:decimal`    | `::numeric`     |
+| `:date`       | `::date`        |
+| `:datetime`   | `::timestamptz` |
+| `:time`       | `::time`        |
+
+`keys:` also accepts a callable that resolves the type per request. This is useful when keys are dynamic (for example, custom-field definition IDs):
+
+```ruby
+SIFT_RANGE_TYPES = { "decimal" => :decimal, "date" => :date, "datetime" => :datetime }.freeze
+
+filter_on :custom_fields, type: :jsonb, keys: ->(definition_id) {
+  data_type = CustomFieldDefinition.where(id: definition_id).pick(:data_type)
+  SIFT_RANGE_TYPES[data_type] # nil for non-range types -> exact match / array overlap unchanged
+}
+```
+
+Keys without a declared (or with an unsupported) type keep the existing exact-match / array-overlap behavior. Sending a range against an undeclared or unsupported key type returns a clear validation error rather than producing broken SQL.
 
 ## Filter on JSON Array
 

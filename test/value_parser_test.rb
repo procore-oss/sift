@@ -141,6 +141,45 @@ class FilterTest < ActiveSupport::TestCase
     end
   end
 
+  test "jsonb per-key string range value is parsed into a Range" do
+    options = {
+      supports_ranges: true,
+      supports_json: true,
+      supports_json_object: true
+    }
+    parser = Sift::ValueParser.new(value: "{\"price\":\"10...100\"}", options: options)
+
+    result = parser.parse
+    assert_instance_of Range, result["price"]
+    assert_equal "10", result["price"].begin
+    assert_equal "100", result["price"].end
+  end
+
+  test "jsonb non-range keys are unchanged when a sibling key is a range" do
+    options = {
+      supports_ranges: true,
+      supports_json: true,
+      supports_json_object: true
+    }
+    parser = Sift::ValueParser.new(value: "{\"price\":\"10...100\",\"color\":\"red\"}", options: options)
+
+    result = parser.parse
+    assert_instance_of Range, result["price"]
+    assert_equal "red", result["color"]
+  end
+
+  test "jsonb whole-string range is not treated as a Range (bug fix)" do
+    options = {
+      supports_ranges: true,
+      supports_json: true,
+      supports_json_object: true
+    }
+    parser = Sift::ValueParser.new(value: "10...100", options: options)
+
+    refute_instance_of Range, parser.parse
+    assert_equal "10...100", parser.parse
+  end
+
   test "parses range for Date string range and normalizes DateTime values" do
     options = {
       supports_ranges: true

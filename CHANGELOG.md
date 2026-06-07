@@ -1,5 +1,12 @@
 ## Unreleased
 
+## 1.1.0
+
+- Add range filtering on JSONB keys via the `{"key":"a...b"}` form (e.g. `?filters[metadata]={"price":"10...100"}`)
+- Add a `keys:` option to `filter_on` for `:jsonb` filters that declares the cast type per key, accepting either a Hash (`{ price: :decimal }`) or a callable (`->(key) { ... }`) resolved per request
+- Supported range key types: `:int`, `:decimal`, `:date`, `:datetime`, `:time`. A range on an undeclared or unsupported key type now returns a clear validation error instead of broken SQL
+- Fix a latent bug where a `...` inside a JSONB value was mis-parsed as a whole-string range
+
 ## 1.0.0
 
 - Bump version to 1.0.0, making it an official release

@@ -11,6 +11,7 @@ require "sift/where_handler"
 require "sift/validators/valid_int_validator"
 require "sift/validators/valid_date_range_validator"
 require "sift/validators/valid_json_validator"
+require "sift/validators/valid_jsonb_validator"
 
 module Sift
   extend ActiveSupport::Concern
@@ -66,8 +67,8 @@ module Sift
   end
 
   class_methods do
-    def filter_on(parameter, type:, internal_name: parameter, default: nil, validate: nil, scope_params: [], tap: nil)
-      filters << Filter.new(parameter, type, internal_name, default, validate, scope_params, tap)
+    def filter_on(parameter, type:, internal_name: parameter, default: nil, validate: nil, scope_params: [], tap: nil, keys: nil)
+      filters << Filter.new(parameter, type, internal_name, default, validate, scope_params, tap, keys)
     end
 
     def filters
