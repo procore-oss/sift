@@ -17,6 +17,8 @@ class PostsController < ApplicationController
   filter_on :metadata, type: :jsonb
 
   filter_on :french_bread, type: :string, internal_name: :title
+  filter_on :nullable_priority, type: :int, internal_name: :priority, allow_nil: true
+  filter_on :nullable_title, type: :string, internal_name: :title, allow_nil: true
   filter_on :body2, type: :scope, internal_name: :body2, default: ->(c) { c.order(:body) }
 
   filter_on :expiration, type: :datetime, tap: ->(value, params) {

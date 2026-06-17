@@ -4,8 +4,8 @@ module Sift
   class Filter
     attr_reader :parameter, :default, :custom_validate, :scope_params
 
-    def initialize(param, type, internal_name, default, custom_validate = nil, scope_params = [], tap = ->(value, _params) { value })
-      @parameter = Parameter.new(param, type, internal_name)
+    def initialize(param, type, internal_name, default, custom_validate = nil, scope_params = [], tap = ->(value, _params) { value }, allow_nil: false)
+      @parameter = Parameter.new(param, type, internal_name, allow_nil: allow_nil)
       @default = default
       @custom_validate = custom_validate
       @scope_params = scope_params
@@ -41,7 +41,7 @@ module Sift
     end
 
     def type_validator
-      @type_validator ||= Sift::TypeValidator.new(param, type)
+      @type_validator ||= Sift::TypeValidator.new(param, type, allow_nil: parameter.allow_nil)
     end
 
     def type
