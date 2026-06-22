@@ -306,6 +306,45 @@ class PostsControllerTest < ActionDispatch::IntegrationTest
     assert_mock instance_mock
   end
 
+  test "it parses a jsonb range value into a hash with a per-key range and not a top-level range" do
+    # Regression test for issue #80: a jsonb value that contains a "..." range
+    # used to be parsed as a top-level Range by ValueParser before reaching the
+    # handler. The outer value must stay a Hash; only the individual key value
+    # is turned into a Range (with normalized DateTime endpoints).
+    post = Post.create!(metadata: { "published_at" => "2018-01-01" }.to_json)
+    Post.create!(metadata: { "published_at" => "2018-02-01" }.to_json)
+
+    start_date = "2018-01-01"
+    end_date   = "2018-01-02"
+    captured_value = nil
+
+    instance_mock = Minitest::Mock.new
+    instance_mock.expect(:call, Post.where(id: post.id)) do |_collection, value, _params, _scope_params|
+      captured_value = value
+      true
+    end
+
+    class_mock = Minitest::Mock.new
+    class_mock.expect :call, instance_mock, [Sift::Parameter]
+
+    Sift::WhereHandler.stub :new, class_mock, [Sift::Parameter] do
+      get("/posts", params: { filters: { metadata: { published_at: "#{start_date}...#{end_date}" }.to_json } })
+
+      json = JSON.parse(@response.body)
+      assert_equal 1, json.size
+      assert_equal post.id, json.first["id"]
+    end
+
+    refute_instance_of Range, captured_value
+    assert_instance_of Hash, captured_value
+    range = captured_value.fetch("published_at")
+    assert_instance_of Range, range
+    assert_equal DateTime.parse(start_date), range.first
+    assert_equal DateTime.parse(end_date), range.last
+    assert_mock class_mock
+    assert_mock instance_mock
+  end
+
   test "it filters on metadata by jsonb array" do
     post = Post.create!(metadata: [1,2,3].to_json)
     Post.create!(metadata: [4,5,6].to_json)

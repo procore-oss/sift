@@ -26,27 +26,13 @@ module Sift
             "#{@param.internal_name}->>'#{key}' #{element === nil ? 'IS NULL' : "= :value_#{i}"}"
           end.join(' OR ')
           collection.where("(#{main_condition}) OR (#{sub_conditions})", elements)
-        elsif date_range?(val)
-          from_date, end_date = normalized_date_range(val)
-          collection.where("#{@param.internal_name}->>'#{key}' BETWEEN ? AND ?", from_date, end_date)
+        elsif val.is_a?(Range)
+          collection.where("#{@param.internal_name}->>'#{key}' BETWEEN ? AND ?", val.first, val.last)
         else
           collection.where("#{@param.internal_name}->>'#{key}' = ?", val.to_s)
         end
       end
       collection
-    end
-
-    def date_range?(val)
-      val.is_a?(String) && val.include?("...")
-    end
-
-    def normalized_date_range(raw_value)
-      from_date_string, end_date_string = raw_value.split("...")
-      [from_date_string, end_date_string].map do |date_string|
-        DateTime.parse(date_string.to_s)
-      rescue StandardError
-        date_string
-      end
     end
   end
 end

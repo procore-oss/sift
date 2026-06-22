@@ -67,6 +67,51 @@ class FilterTest < ActiveSupport::TestCase
     assert_equal parsed_expected, parser.parse
   end
 
+  test "parses a jsonb object range value into a Range with normalized DateTime endpoints" do
+    options = {
+      supports_ranges: true,
+      supports_json: true,
+      supports_json_object: true
+    }
+    start_date = "2018-01-01T00:00:00+00:00"
+    end_date   = "2018-01-02T00:00:00+00:00"
+    json_string = { "published_at" => "#{start_date}...#{end_date}" }.to_json
+    parser = Sift::ValueParser.new(value: json_string, options: options)
+
+    result = parser.parse
+    range = result.fetch("published_at")
+    assert_instance_of Range, range
+    assert_equal DateTime.parse(start_date), range.first
+    assert_equal DateTime.parse(end_date), range.last
+  end
+
+  test "parses a jsonb object range value with unparseable endpoints into a Range of raw strings" do
+    options = {
+      supports_ranges: true,
+      supports_json: true,
+      supports_json_object: true
+    }
+    json_string = { "window" => "not-a-date...also-not-a-date" }.to_json
+    parser = Sift::ValueParser.new(value: json_string, options: options)
+
+    range = parser.parse.fetch("window")
+    assert_instance_of Range, range
+    assert_equal "not-a-date", range.first
+    assert_equal "also-not-a-date", range.last
+  end
+
+  test "leaves plain jsonb object string values untouched" do
+    options = {
+      supports_ranges: true,
+      supports_json: true,
+      supports_json_object: true
+    }
+    json_string = { "label" => "anything" }.to_json
+    parser = Sift::ValueParser.new(value: json_string, options: options)
+
+    assert_equal({ "label" => "anything" }, parser.parse)
+  end
+
   test "With options a range string of integers results in a range" do
     options = {
       supports_ranges: true,

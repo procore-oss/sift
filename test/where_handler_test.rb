@@ -42,30 +42,23 @@ class WhereHandlerTest < ActiveSupport::TestCase
     assert_includes sql, "'blue'"
   end
 
-  test "for jsonb params with a date range value it builds a BETWEEN clause with parsed dates" do
+  test "for jsonb params with a Range value it builds a BETWEEN clause from the endpoints" do
     parameter = Sift::Parameter.new(:metadata, :jsonb, :metadata)
     handler = Sift::WhereHandler.new(parameter)
 
-    start_date = "2018-01-01T00:00:00+00:00"
-    end_date   = "2018-01-02T00:00:00+00:00"
-    range_string = "#{start_date}...#{end_date}"
-
-    relation = handler.call(Post.all, { "published_at" => range_string }, {}, [])
+    range = Range.new(DateTime.parse("2018-01-01T00:00:00+00:00"), DateTime.parse("2018-01-02T00:00:00+00:00"))
+    relation = handler.call(Post.all, { "published_at" => range }, {}, [])
     sql = relation.to_sql
 
     assert_includes sql, "metadata->>'published_at' BETWEEN"
-    # The endpoints are parsed to DateTimes and bound by ActiveRecord, so they
-    # appear in the rendered SQL in the adapter's datetime format rather than
-    # as the original ISO-8601 strings.
     assert_match(/BETWEEN '2018-01-01[T ]00:00:00.*' AND '2018-01-02[T ]00:00:00.*'/, sql)
-    refute_includes sql, range_string
   end
 
-  test "for jsonb params with an unparseable date range it falls back to the raw strings" do
+  test "for jsonb params with a Range of raw strings it binds the endpoints verbatim" do
     parameter = Sift::Parameter.new(:metadata, :jsonb, :metadata)
     handler = Sift::WhereHandler.new(parameter)
 
-    relation = handler.call(Post.all, { "window" => "not-a-date...also-not-a-date" }, {}, [])
+    relation = handler.call(Post.all, { "window" => Range.new("not-a-date", "also-not-a-date") }, {}, [])
     sql = relation.to_sql
 
     assert_includes sql, "metadata->>'window' BETWEEN"
@@ -88,10 +81,10 @@ class WhereHandlerTest < ActiveSupport::TestCase
     parameter = Sift::Parameter.new(:metadata, :jsonb, :metadata)
     handler = Sift::WhereHandler.new(parameter)
 
-    range_string = "2018-01-01T00:00:00+00:00...2018-01-02T00:00:00+00:00"
+    range = Range.new(DateTime.parse("2018-01-01T00:00:00+00:00"), DateTime.parse("2018-01-02T00:00:00+00:00"))
     relation = handler.call(
       Post.all,
-      { "published_at" => range_string, "status" => "active" },
+      { "published_at" => range, "status" => "active" },
       {},
       []
     )
