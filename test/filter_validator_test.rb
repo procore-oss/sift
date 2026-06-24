@@ -263,4 +263,59 @@ class FilterValidatorTest < ActiveSupport::TestCase
     assert !validator.valid?
     assert_equal expected_messages, validator.errors.messages
   end
+
+  test "it allows a jsonb range on a declared key type" do
+    filter = Sift::Filter.new(:metadata, :jsonb, :metadata, nil, nil, [], nil, { price: :decimal })
+
+    validator = Sift::FilterValidator.build(
+      filters: [filter],
+      sort_fields: [],
+      filter_params: { metadata: "{\"price\":\"10...100\"}" },
+      sort_params: [],
+    )
+    assert validator.valid?
+    assert_equal Hash.new, validator.errors.messages
+  end
+
+  test "it rejects a jsonb range on an undeclared key" do
+    filter = Sift::Filter.new(:metadata, :jsonb, :metadata, nil)
+    expected_messages = { metadata: ["range filtering on key 'price' requires a declared key type"] }
+
+    validator = Sift::FilterValidator.build(
+      filters: [filter],
+      sort_fields: [],
+      filter_params: { metadata: "{\"price\":\"10...100\"}" },
+      sort_params: [],
+    )
+    assert !validator.valid?
+    assert_equal expected_messages, validator.errors.messages
+  end
+
+  test "it rejects a jsonb range whose bounds do not cast to the declared type" do
+    filter = Sift::Filter.new(:metadata, :jsonb, :metadata, nil, nil, [], nil, { price: :decimal })
+    expected_messages = { metadata: ["range bound 'cheap' for key 'price' is not a valid decimal"] }
+
+    validator = Sift::FilterValidator.build(
+      filters: [filter],
+      sort_fields: [],
+      filter_params: { metadata: "{\"price\":\"cheap...100\"}" },
+      sort_params: [],
+    )
+    assert !validator.valid?
+    assert_equal expected_messages, validator.errors.messages
+  end
+
+  test "it allows a jsonb range using a callable key resolver" do
+    keys = ->(key) { key == "released_on" ? :date : nil }
+    filter = Sift::Filter.new(:metadata, :jsonb, :metadata, nil, nil, [], nil, keys)
+
+    validator = Sift::FilterValidator.build(
+      filters: [filter],
+      sort_fields: [],
+      filter_params: { metadata: "{\"released_on\":\"2020-01-01...2020-12-31\"}" },
+      sort_params: [],
+    )
+    assert validator.valid?
+    assert_equal Hash.new, validator.errors.messages
+  end
 end

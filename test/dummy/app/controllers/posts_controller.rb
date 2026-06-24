@@ -15,6 +15,7 @@ class PostsController < ApplicationController
   filter_on :expired_before, type: :scope
   filter_on :expired_before_and_priority, type: :scope, scope_params: [:priority]
   filter_on :metadata, type: :jsonb
+  filter_on :metadata_ranges, type: :jsonb, internal_name: :metadata, keys: { price: :decimal }
 
   filter_on :french_bread, type: :string, internal_name: :title
   filter_on :body2, type: :scope, internal_name: :body2, default: ->(c) { c.order(:body) }

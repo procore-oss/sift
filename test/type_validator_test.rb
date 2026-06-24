@@ -43,14 +43,22 @@ class TypeValidatorTest < ActiveSupport::TestCase
 
   test "it accepts a json array for type jsonb" do
     validator = Sift::TypeValidator.new("[1,10]", :jsonb)
-    expected_validation = { valid_json: true }
+    expected_validation = { valid_json: true, valid_jsonb: { keys: nil } }
 
     assert_equal expected_validation, validator.validate
   end
 
   test "it accepts a json object for type jsonb" do
     validator = Sift::TypeValidator.new("{\"a\":4}", :jsonb)
-    expected_validation = { valid_json: true }
+    expected_validation = { valid_json: true, valid_jsonb: { keys: nil } }
+
+    assert_equal expected_validation, validator.validate
+  end
+
+  test "it threads declared keys into the jsonb validation" do
+    keys = { price: :decimal }
+    validator = Sift::TypeValidator.new("{\"price\":\"10...100\"}", :jsonb, keys)
+    expected_validation = { valid_json: true, valid_jsonb: { keys: keys } }
 
     assert_equal expected_validation, validator.validate
   end

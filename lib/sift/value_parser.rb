@@ -32,10 +32,18 @@ module Sift
       parsed_jsonb = parse_json(value)
       return parsed_jsonb if parsed_jsonb.is_a?(Array) || parsed_jsonb.is_a?(String)
 
-      parsed_jsonb.each_with_object({}) do |key_value, hash|
-        key   = key_value.first
-        value = key_value.last
-        hash[key] = value.is_a?(String) ? parse_json(value) : value
+      parsed_jsonb.each_with_object({}) do |(key, key_value), hash|
+        hash[key] = parse_jsonb_value(key_value)
+      end
+    end
+
+    def parse_jsonb_value(key_value)
+      return key_value unless key_value.is_a?(String)
+
+      if supports_ranges && key_value.include?("...")
+        Range.new(*key_value.split("..."))
+      else
+        parse_json(key_value)
       end
     end
 
@@ -53,7 +61,9 @@ module Sift
     attr_reader :value, :type, :supports_boolean, :supports_json, :supports_json_object, :supports_ranges
 
     def parse_as_range?(raw_value=value)
-      supports_ranges && raw_value.to_s.include?("...")
+      # Guard against jsonb objects: a `...` inside a jsonb value is a per-key
+      # range handled in parse_json_and_values, not a whole-string range.
+      supports_ranges && !supports_json_object && raw_value.to_s.include?("...")
     end
 
     def range_value
