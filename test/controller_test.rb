@@ -328,4 +328,70 @@ class PostsControllerTest < ActionDispatch::IntegrationTest
     assert_mock class_mock
     assert_mock instance_mock
   end
+
+  test "it filters with null token on an allow_nil integer column" do
+    post_with_nil = Post.create!(priority: nil)
+    Post.create!(priority: 5)
+
+    get("/posts", params: { filters: { nullable_priority: "null" } })
+
+    json = JSON.parse(@response.body)
+    assert_equal 1, json.size
+    assert_equal post_with_nil.id, json.first["id"]
+  end
+
+  test "it filters with uppercase NULL token on an allow_nil integer column" do
+    post_with_nil = Post.create!(priority: nil)
+    Post.create!(priority: 5)
+
+    get("/posts", params: { filters: { nullable_priority: "NULL" } })
+
+    json = JSON.parse(@response.body)
+    assert_equal 1, json.size
+    assert_equal post_with_nil.id, json.first["id"]
+  end
+
+  test "it filters with null token combined with real values on an allow_nil integer column" do
+    post_with_nil = Post.create!(priority: nil)
+    post_with_five = Post.create!(priority: 5)
+    Post.create!(priority: 10)
+
+    get("/posts", params: { filters: { nullable_priority: ["null", post_with_five.priority] } })
+
+    json = JSON.parse(@response.body)
+    returned_ids = json.map { |p| p["id"] }.sort
+    assert_equal [post_with_nil.id, post_with_five.id].sort, returned_ids
+  end
+
+  test "it filters with null token on an allow_nil string column" do
+    Post.create!(title: "hello")
+    post_with_nil = Post.create!(title: nil)
+
+    get("/posts", params: { filters: { nullable_title: "null" } })
+
+    json = JSON.parse(@response.body)
+    assert_equal 1, json.size
+    assert_equal post_with_nil.id, json.first["id"]
+  end
+
+  test "it rejects null token on an integer column without allow_nil" do
+    Post.create!(priority: nil)
+
+    get("/posts", params: { filters: { priority: "null" } })
+
+    assert_equal "400", @response.code
+    json = JSON.parse(@response.body)
+    assert_equal({ "errors" => { "priority" => ["must be integer, array of integers, or range"] } }, json)
+  end
+
+  test "it filters without null token preserves original behavior" do
+    post = Post.create!(priority: 5)
+    Post.create!(priority: 10)
+
+    get("/posts", params: { filters: { priority: post.priority } })
+
+    json = JSON.parse(@response.body)
+    assert_equal 1, json.size
+    assert_equal post.id, json.first["id"]
+  end
 end

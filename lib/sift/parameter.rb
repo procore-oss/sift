@@ -1,12 +1,13 @@
 module Sift
   # Value Object that wraps some handling of filter params
   class Parameter
-    attr_reader :param, :type, :internal_name
+    attr_reader :param, :type, :internal_name, :allow_nil
 
-    def initialize(param, type, internal_name = param)
+    def initialize(param, type, internal_name = param, allow_nil: false)
       @param = param
       @type = type
       @internal_name = internal_name
+      @allow_nil = allow_nil
     end
 
     def parse_options

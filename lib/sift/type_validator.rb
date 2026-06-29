@@ -17,9 +17,10 @@ module Sift
                        :scope,
                        :jsonb].freeze
 
-    def initialize(param, type)
+    def initialize(param, type, allow_nil: false)
       @param = param
       @type = type
+      @allow_nil = allow_nil
     end
 
     attr_reader :param, :type
@@ -46,7 +47,7 @@ module Sift
     private
 
     def valid_int?
-      { valid_int: true }
+      @allow_nil ? { valid_int: { allow_null_token: true } } : { valid_int: true }
     end
   end
 end

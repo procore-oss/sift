@@ -1,5 +1,7 @@
 module Sift
   class WhereHandler
+    NULL_TOKEN = "null"
+
     def initialize(param)
       @param = param
     end
@@ -7,12 +9,29 @@ module Sift
     def call(collection, value, _params, _scope_params)
       if @param.type == :jsonb
         apply_jsonb_conditions(collection, value)
+      elsif @param.allow_nil
+        apply_null_aware_conditions(collection, value)
       else
         collection.where(@param.internal_name => value)
       end
     end
 
     private
+
+    def apply_null_aware_conditions(collection, value)
+      values = Array(value)
+      has_null = values.any? { |v| v.to_s.downcase == NULL_TOKEN }
+      non_null_values = values.reject { |v| v.to_s.downcase == NULL_TOKEN }
+
+      if has_null && non_null_values.any?
+        collection.where(@param.internal_name => nil)
+                  .or(collection.where(@param.internal_name => non_null_values))
+      elsif has_null
+        collection.where(@param.internal_name => nil)
+      else
+        collection.where(@param.internal_name => value)
+      end
+    end
 
     def apply_jsonb_conditions(collection, value)
       return collection.where("#{@param.internal_name} @> ?", value.to_s) if value.is_a?(Array)
