@@ -1,5 +1,8 @@
 ## Unreleased
 
+- Add support for `...` date ranges within `jsonb` filters, applied as a `BETWEEN` clause per key
+- Fix `jsonb` values containing `...` being parsed as a top-level `Range` instead of a hash, which raised `NoMethodError` for nested params and produced an invalid `Range` for JSON object strings (issue #80)
+
 ## 1.0.0
 
 - Bump version to 1.0.0, making it an official release

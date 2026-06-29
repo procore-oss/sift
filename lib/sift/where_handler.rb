@@ -45,6 +45,8 @@ module Sift
             "#{@param.internal_name}->>'#{key}' #{element === nil ? 'IS NULL' : "= :value_#{i}"}"
           end.join(' OR ')
           collection.where("(#{main_condition}) OR (#{sub_conditions})", elements)
+        elsif val.is_a?(Range)
+          collection.where("#{@param.internal_name}->>'#{key}' BETWEEN ? AND ?", val.first, val.last)
         else
           collection.where("#{@param.internal_name}->>'#{key}' = ?", val.to_s)
         end
