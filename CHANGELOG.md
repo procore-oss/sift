@@ -4,6 +4,8 @@
 
 - Add support for Rails 7.1, 7.2, and 8.0 (#67)
 - Migrate CI from Travis to GitHub Actions; test matrix covers Ruby 2.7–3.3 against Rails 7.0–8.0 (#67)
+- Add `allow_nil: true` option to `filter_on` to enable `IS NULL` filtering for non-JSONB column types (#84)
+- Add support for date range filtering on JSONB keys, using the same `...` range format as other filters (#83)
 - Fix boolean filter being silently skipped when the value is `false` (#58). Note: filters with empty-string values are now applied (previously skipped); review consumers if you relied on the old behavior.
 - Fix `NameError` in JSONB filtering when value is an Array (#56)
 - Reorganize documentation into a `docs/` directory (#68)

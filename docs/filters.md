@@ -154,6 +154,29 @@ end
 
 The lambda receives the validator object, which gives you access to the filter value and allows you to add errors using `validator.errors.add(:field_name, "error message")`.
 
+## Filtering on Null Values
+
+By default, non-JSONB filters cannot match rows where a column is `NULL`. Setting `allow_nil: true` on a filter lets consumers opt in to `IS NULL` filtering by passing the string `null` as the filter value.
+
+```ruby
+class PostsController < ApplicationController
+  include Sift
+
+  filter_on :assignee_id, type: :int, allow_nil: true
+end
+```
+
+With `allow_nil: true`:
+
+- `?filters[assignee_id]=null` produces `WHERE assignee_id IS NULL`
+- `?filters[assignee_id][]=null&filters[assignee_id][]=5` combines the null check with the other values, producing `WHERE assignee_id IS NULL OR assignee_id IN (5)`
+
+The `null` value is case-insensitive, so `null` and `NULL` behave identically.
+
+Filters without `allow_nil: true` are unaffected: `null` is treated as an ordinary value and validated against the filter's type (for example, an `int` filter returns a `400` validation error).
+
+> JSONB columns already support null filtering without this option — see [Filter on JSONB Column](#filter-on-jsonb-column).
+
 ## Filter on JSONB Column
 
 Usually JSONB columns stores values as an Array or an Object (key-value), in both cases the parameter needs to be sent in a JSON format.
@@ -198,6 +221,20 @@ Will return records with next values stored in the JSONB column `metadata`:
 { data_2: [false] }
 { data_1: {another: 'information'} } # When the JSONB key "data_2" is not set.
 ```
+
+### Filtering JSONB Keys on Date Ranges
+
+JSONB key values support date ranges using the same `...` separator as other [range filters](#filter-on-ranges). Pass a range string as the value for a key:
+
+- `?filters[metadata]={"published_at":"2018-01-01...2018-01-02"}`
+
+This extracts the key and produces a `BETWEEN` condition:
+
+```sql
+metadata->>'published_at' BETWEEN '2018-01-01' AND '2018-01-02'
+```
+
+The bounds are parsed as dates when possible and fall back to the raw string otherwise, matching the behavior of the top-level `datetime` range filter.
 
 ## Filter on JSON Array
 
