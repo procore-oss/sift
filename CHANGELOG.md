@@ -1,7 +1,18 @@
 ## Unreleased
 
-- Add support for `...` date ranges within `jsonb` filters, applied as a `BETWEEN` clause per key
-- Fix `jsonb` values containing `...` being parsed as a top-level `Range` instead of a hash, which raised `NoMethodError` for nested params and produced an invalid `Range` for JSON object strings (issue #80)
+## 1.1.0
+
+- Add support for Rails 7.1, 7.2, and 8.0 (#67)
+- Migrate CI from Travis to GitHub Actions; test matrix covers Ruby 2.7–3.3 against Rails 7.0–8.0 (#67)
+- Add `allow_nil: true` option to `filter_on` to enable `IS NULL` filtering for non-JSONB column types (#84)
+- Add support for date range filtering on JSONB keys, using the same `...` range format as other filters (#83)
+- Fix boolean filter being silently skipped when the value is `false` (#58). Note: filters with empty-string values are now applied (previously skipped); review consumers if you relied on the old behavior.
+- Fix `NameError` in JSONB filtering when value is an Array (#56)
+- Reorganize documentation into a `docs/` directory (#68)
+
+### Breaking changes:
+- Drop support for Rails 6.1 / ActiveRecord 6.1
+- Require `activerecord >= 7.0`
 
 ## 1.0.0
 
