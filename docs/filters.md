@@ -173,6 +173,10 @@ With `allow_nil: true`:
 
 The `null` value is case-insensitive, so `null` and `NULL` behave identically.
 
+A JSON array may also use a bare JSON `null` element, so `?filters[assignee_id]=[null,"5"]` and `?filters[assignee_id]=[null]` behave the same as the string forms above. Only a `null` *inside* an array is treated this way; blank values such as `?filters[assignee_id]=` or `?filters[assignee_id][]=` are never treated as `null`.
+
+> Send null filters in the query string. In a JSON request body, Rails removes `null` elements from arrays before Sift sees them, so `{"filters":{"assignee_id":[null,5]}}` arrives as `[5]` and silently drops the `IS NULL` condition. Use `{"filters":{"assignee_id":"[null,5]"}}` or `{"filters":{"assignee_id":["null",5]}}` instead.
+
 Filters without `allow_nil: true` are unaffected: `null` is treated as an ordinary value and validated against the filter's type (for example, an `int` filter returns a `400` validation error).
 
 > JSONB columns already support null filtering without this option — see [Filter on JSONB Column](#filter-on-jsonb-column).

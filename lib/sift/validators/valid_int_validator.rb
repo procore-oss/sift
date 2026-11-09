@@ -21,7 +21,13 @@ class ValidIntValidator < ActiveModel::EachValidator
       value = Sift::ValueParser.new(value: value).array_from_json
     end
 
-    value.is_a?(Array) && value.any? && value.all? { |v| integer_or_range?(v) || (allow_null_token? && null_token?(v)) }
+    value.is_a?(Array) && !value.empty? && value.all? { |v| integer_or_range?(v) || (allow_null_token? && null_element?(v)) }
+  end
+
+  # A nil element can only come from an explicit JSON null (e.g. `[null,"5"]`); Rails strips
+  # nils from array params and blank values never reach here as array elements.
+  def null_element?(value)
+    value.nil? || null_token?(value)
   end
 
   def integer_or_range?(value)
