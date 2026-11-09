@@ -9,6 +9,9 @@ permissions:
 
 jobs:
   assign:
+    # GITHUB_TOKEN is forced read-only for pull_request events from forks, so the
+    # assign API call would 403. Fork authors are not assignable here anyway.
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
       - uses: toshimaru/auto-author-assign@4d585cc37690897bd9015942ed6e766aa7cdb97f # v3.0.1

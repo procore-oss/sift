@@ -1,5 +1,9 @@
 ## Unreleased
 
+### Breaking changes:
+- Drop support for Rails 7.2 and 8.0 (end-of-life); require `activerecord >= 8.1`
+- CI test matrix now covers Ruby 3.3–3.4 against Rails 8.1
+
 ## 1.2.1
 
 - Fix: a blank filter value (`nil` / `""` / `[]`) no longer activates its filter. 1.2.0 activated a filter whenever its param key was present, so an empty value produced conditions like `WHERE col = ''` — harmless on some string columns, but a 500 (`PG::InvalidTextRepresentation`) on integer/uuid columns and unintended narrowing (`WHERE col IN ()`) elsewhere. Blank values are now skipped again (pre-1.2 behavior). A literal boolean `false` is still treated as an active value, preserving the #58 fix.
