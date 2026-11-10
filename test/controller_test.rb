@@ -402,6 +402,52 @@ class PostsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [post_with_nil.id, post_with_five.id].sort, returned_ids
   end
 
+  test "it filters with a JSON null element combined with real values on an allow_nil integer column" do
+    post_with_nil = Post.create!(priority: nil)
+    post_with_five = Post.create!(priority: 5)
+    Post.create!(priority: 10)
+
+    get("/posts", params: { filters: { nullable_priority: "[null,\"5\"]" } })
+
+    json = JSON.parse(@response.body)
+    returned_ids = json.map { |p| p["id"] }.sort
+    assert_equal [post_with_nil.id, post_with_five.id].sort, returned_ids
+  end
+
+  test "it filters with only a JSON null element on an allow_nil integer column" do
+    post_with_nil = Post.create!(priority: nil)
+    Post.create!(priority: 5)
+
+    get("/posts", params: { filters: { nullable_priority: "[null]" } })
+
+    json = JSON.parse(@response.body)
+    assert_equal 1, json.size
+    assert_equal post_with_nil.id, json.first["id"]
+  end
+
+  test "it rejects a JSON null element on an integer column without allow_nil" do
+    get("/posts", params: { filters: { priority: "[null,\"5\"]" } })
+
+    assert_equal "400", @response.code
+  end
+
+  test "it rejects an empty string element on an allow_nil integer column" do
+    get("/posts", params: { filters: { nullable_priority: ["", "5"] } })
+
+    assert_equal "400", @response.code
+  end
+
+  test "it does not treat blank values as null on an allow_nil integer column" do
+    Post.create!(priority: nil)
+    Post.create!(priority: 5)
+
+    ["", [], "[]"].each do |blank|
+      get("/posts", params: { filters: { nullable_priority: blank } })
+
+      assert_equal "400", @response.code, "expected #{blank.inspect} to be rejected, not filtered as IS NULL"
+    end
+  end
+
   test "it filters with null token on an allow_nil string column" do
     Post.create!(title: "hello")
     post_with_nil = Post.create!(title: nil)

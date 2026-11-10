@@ -20,8 +20,8 @@ module Sift
 
     def apply_null_aware_conditions(collection, value)
       values = Array(value)
-      has_null = values.any? { |v| v.to_s.downcase == NULL_TOKEN }
-      non_null_values = values.reject { |v| v.to_s.downcase == NULL_TOKEN }
+      has_null = values.any? { |v| null_value?(v) }
+      non_null_values = values.reject { |v| null_value?(v) }
 
       if has_null && non_null_values.any?
         collection.where(@param.internal_name => nil)
@@ -31,6 +31,10 @@ module Sift
       else
         collection.where(@param.internal_name => value)
       end
+    end
+
+    def null_value?(value)
+      value.nil? || value.to_s.downcase == NULL_TOKEN
     end
 
     def apply_jsonb_conditions(collection, value)

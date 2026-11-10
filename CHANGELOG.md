@@ -1,5 +1,8 @@
 ## Unreleased
 
+- `allow_nil: true` filters now accept a bare JSON `null` element in an array (`[null,"5"]`, `[null]`) as `IS NULL`, the same as the string `"null"`. Previously these requests failed validation with a 400. Blank values (`nil` / `""` / `[]`) are still never treated as `null`.
+- Fix `[null]` alone being rejected by `int` validation because `[nil].any?` is `false`.
+
 ## 1.2.1
 
 - Fix: a blank filter value (`nil` / `""` / `[]`) no longer activates its filter. 1.2.0 activated a filter whenever its param key was present, so an empty value produced conditions like `WHERE col = ''` — harmless on some string columns, but a 500 (`PG::InvalidTextRepresentation`) on integer/uuid columns and unintended narrowing (`WHERE col IN ()`) elsewhere. Blank values are now skipped again (pre-1.2 behavior). A literal boolean `false` is still treated as an active value, preserving the #58 fix.
