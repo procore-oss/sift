@@ -1,7 +1,10 @@
 ## Unreleased
 
+## 1.2.2
+
 - `allow_nil: true` filters now accept a bare JSON `null` element in an array (`[null,"5"]`, `[null]`) as `IS NULL`, the same as the string `"null"`. Previously these requests failed validation with a 400. Blank values (`nil` / `""` / `[]`) are still never treated as `null`.
 - Fix `[null]` alone being rejected by `int` validation because `[nil].any?` is `false`.
+- CI: pin `json < 3` in the Rails 8.0 test matrix; `json` 3.0 rejects the `quirks_mode` option that ActiveSupport 8.0 still passes.
 
 ## 1.2.1
 

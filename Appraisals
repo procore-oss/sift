@@ -6,4 +6,5 @@ end
 appraise 'rails-80' do
   gem 'rails', '~> 8.0.0'
   gem 'minitest', '~> 5.0'
+  gem 'json', '< 3'
 end
