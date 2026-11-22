@@ -1,5 +1,7 @@
 ## Unreleased
 
+- Add `allow_array_range: true` option to `filter_on` for `date` and `datetime` filters. It accepts a `[start, end]` array of dates alongside the `start...end` string; a `datetime` array range covers whole days in `Time.zone`, and a blank value is left unapplied rather than rejected. Filters without the option are unchanged.
+
 ## 1.2.2
 
 - `allow_nil: true` filters now accept a bare JSON `null` element in an array (`[null,"5"]`, `[null]`) as `IS NULL`, the same as the string `"null"`. Previously these requests failed validation with a 400. Blank values (`nil` / `""` / `[]`) are still never treated as `null`.

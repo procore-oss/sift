@@ -6,12 +6,16 @@ module Sift
       @supports_ranges = options.fetch(:supports_ranges, false)
       @supports_json = options.fetch(:supports_json, false)
       @supports_json_object = options.fetch(:supports_json_object, false)
+      @supports_array_ranges = options.fetch(:supports_array_ranges, false)
+      @type = type
       @value = normalized_value(value, type)
     end
 
     def parse
       @_result ||=
-        if parse_as_range?
+        if parse_as_array_range?
+          array_range_value
+        elsif parse_as_range?
           range_value
         elsif parse_as_boolean?
           boolean_value
@@ -50,7 +54,21 @@ module Sift
 
     private
 
-    attr_reader :value, :type, :supports_boolean, :supports_json, :supports_json_object, :supports_ranges
+    attr_reader :value, :type, :supports_boolean, :supports_json, :supports_json_object, :supports_ranges, :supports_array_ranges
+
+    def parse_as_array_range?(raw_value = value)
+      supports_array_ranges && raw_value.is_a?(Array)
+    end
+
+    # Each bound is read as a calendar date. A datetime range spans whole days in
+    # Time.zone; a missing end bound makes it a single-day range.
+    def array_range_value
+      from_date, end_date = value.map { |bound| bound.presence&.to_date }
+      end_date ||= from_date
+      return from_date..end_date if type == :date
+
+      from_date.in_time_zone..end_date.in_time_zone.end_of_day
+    end
 
     def parse_as_range?(raw_value=value)
       # jsonb values must not be parsed as a top-level range: the outer value is
@@ -89,7 +107,7 @@ module Sift
     end
 
     def normalized_value(raw_value, type)
-      if type == :datetime && parse_as_range?(raw_value)
+      if type == :datetime && !parse_as_array_range?(raw_value) && parse_as_range?(raw_value)
         normalized_date_range(raw_value)
       else
         raw_value

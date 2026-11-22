@@ -283,6 +283,101 @@ class PostsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [post1.id], (json.map { |post| post.fetch("id") })
   end
 
+  test "it filters datetimes by an array range of whole days" do
+    early = Post.create!(published_at: Time.utc(2026, 1, 5, 12))
+    middle = Post.create!(published_at: Time.utc(2026, 1, 15, 12))
+    Post.create!(published_at: Time.utc(2026, 1, 25, 12))
+
+    get("/posts", params: { filters: { published_within: ["2026-01-05", "2026-01-15"] } })
+
+    json = JSON.parse(@response.body)
+    assert_equal [early.id, middle.id], json.map { |post| post.fetch("id") }.sort
+  end
+
+  test "it filters datetimes by a single-day array range" do
+    Post.create!(published_at: Time.utc(2026, 1, 14, 23, 59))
+    middle = Post.create!(published_at: Time.utc(2026, 1, 15, 12))
+    Post.create!(published_at: Time.utc(2026, 1, 16))
+
+    get("/posts", params: { filters: { published_within: ["2026-01-15"] } })
+    single_bound_ids = JSON.parse(@response.body).map { |post| post.fetch("id") }
+
+    get("/posts", params: { filters: { published_within: ["2026-01-15", ""] } })
+    blank_end_ids = JSON.parse(@response.body).map { |post| post.fetch("id") }
+
+    assert_equal [middle.id], single_bound_ids
+    assert_equal [middle.id], blank_end_ids
+  end
+
+  test "it reads array range days in Time.zone" do
+    Post.create!(published_at: Time.utc(2026, 1, 15, 3))
+    midday_utc = Post.create!(published_at: Time.utc(2026, 1, 15, 12))
+
+    Time.use_zone("America/New_York") do
+      get("/posts", params: { filters: { published_within: ["2026-01-15", "2026-01-15"] } })
+    end
+
+    ids = JSON.parse(@response.body).map { |post| post.fetch("id") }
+    assert_equal [midday_utc.id], ids
+  end
+
+  test "it keeps start...end string semantics on an array range filter" do
+    early = Post.create!(published_at: Time.utc(2026, 1, 5, 12))
+    Post.create!(published_at: Time.utc(2026, 1, 15, 12))
+
+    get("/posts", params: { filters: { published_within: "2026-01-05...2026-01-15" } })
+
+    ids = JSON.parse(@response.body).map { |post| post.fetch("id") }
+    assert_equal [early.id], ids
+  end
+
+  test "it filters dates by an array range" do
+    october = Post.create!(expiration: "2017-10-10")
+    november = Post.create!(expiration: "2017-11-11")
+    Post.create!(expiration: "2017-12-12")
+
+    get("/posts", params: { filters: { expiration_within: ["2017-10-10", "2017-11-11"] } })
+
+    json = JSON.parse(@response.body)
+    assert_equal [october.id, november.id], json.map { |post| post.fetch("id") }.sort
+  end
+
+  test "it leaves an array range filter with a blank value unapplied" do
+    Post.create!(published_at: Time.utc(2026, 1, 5, 12))
+    Post.create!(published_at: nil)
+
+    get("/posts", params: { filters: { published_within: "" } })
+
+    assert_equal "200", @response.code
+    assert_equal 2, JSON.parse(@response.body).size
+  end
+
+  test "it rejects an array range without a start or with extra bounds" do
+    get("/posts", params: { filters: { published_within: ["", "2026-01-15"] } })
+    blank_start = [@response.code, JSON.parse(@response.body)]
+
+    get("/posts", params: { filters: { published_within: ["2026-01-05", "2026-01-15", "2026-01-25"] } })
+    extra_bound = [@response.code, JSON.parse(@response.body)]
+
+    expected = ["400", { "errors" => { "published_within" => ["must be a range"] } }]
+    assert_equal expected, blank_start
+    assert_equal expected, extra_bound
+  end
+
+  test "it rejects an array range with an unparsable bound" do
+    get("/posts", params: { filters: { published_within: ["not-a-date", "2026-01-15"] } })
+
+    assert_equal "400", @response.code
+    assert_equal({ "errors" => { "published_within" => ["is invalid"] } }, JSON.parse(@response.body))
+  end
+
+  test "it rejects an array on a datetime filter without allow_array_range" do
+    get("/posts", params: { filters: { published_at: ["2026-01-05", "2026-01-15"] } })
+
+    assert_equal "400", @response.code
+    assert_equal({ "errors" => { "published_at" => ["must be a range"] } }, JSON.parse(@response.body))
+  end
+
   test "it filters on metadata by jsonb key-value" do
     post = Post.create!(metadata: { 'a' => 4 }.to_json)
     Post.create!(metadata: { 'b' => 5 }.to_json)

@@ -4,14 +4,18 @@ module Sift
   class Filter
     attr_reader :parameter, :default, :custom_validate, :scope_params
 
-    def initialize(param, type, internal_name, default, custom_validate = nil, scope_params = [], tap = ->(value, _params) { value }, allow_nil: false)
-      @parameter = Parameter.new(param, type, internal_name, allow_nil: allow_nil)
+    ARRAY_RANGE_TYPES = [:date, :datetime].freeze
+
+    def initialize(param, type, internal_name, default, custom_validate = nil, scope_params = [], tap = ->(value, _params) { value }, allow_nil: false,
+                   allow_array_range: false)
+      @parameter = Parameter.new(param, type, internal_name, allow_nil: allow_nil, allow_array_range: allow_array_range)
       @default = default
       @custom_validate = custom_validate
       @scope_params = scope_params
       @tap = tap
       raise ArgumentError, "scope_params must be an array of symbols" unless valid_scope_params?(scope_params)
       raise "unknown filter type: #{type}" unless type_validator.valid_type?
+      raise ArgumentError, "allow_array_range only supports date and datetime filters" if allow_array_range && !ARRAY_RANGE_TYPES.include?(type)
     end
 
     def validation(_sort)
@@ -41,7 +45,7 @@ module Sift
     end
 
     def type_validator
-      @type_validator ||= Sift::TypeValidator.new(param, type, allow_nil: parameter.allow_nil)
+      @type_validator ||= Sift::TypeValidator.new(param, type, allow_nil: parameter.allow_nil, allow_array_range: parameter.allow_array_range)
     end
 
     def type
