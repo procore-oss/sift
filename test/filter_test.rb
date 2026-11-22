@@ -27,6 +27,12 @@ class FilterTest < ActiveSupport::TestCase
     end
   end
 
+  test "it raises if allow_array_range is used on a type other than date or datetime" do
+    assert_raise ArgumentError do
+      Sift::Filter.new("hi", :int, "hi", nil, allow_array_range: true)
+    end
+  end
+
   test "it knows what validation it needs when a datetime" do
     filter = Sift::Filter.new("hi", :datetime, "hi", nil)
     expected_validation = { format: { with: /\A.+(?:[^.]\.\.\.[^.]).+\z/, message: "must be a range" }, valid_date_range: true }

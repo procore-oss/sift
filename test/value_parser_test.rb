@@ -186,6 +186,30 @@ class FilterTest < ActiveSupport::TestCase
     end
   end
 
+  test "parses a datetime array range as whole days in Time.zone" do
+    options = { supports_ranges: true, supports_array_ranges: true }
+    zone = ActiveSupport::TimeZone["America/New_York"]
+
+    result = Time.use_zone(zone) do
+      Sift::ValueParser.new(value: ["2026-01-05", "2026-01-15T08:00:00Z"], type: :datetime, options: options).parse
+    end
+
+    assert_equal zone.local(2026, 1, 5)..zone.local(2026, 1, 15, 23, 59, 59.999999999r), result
+  end
+
+  test "parses a date array range as dates" do
+    options = { supports_ranges: true, supports_array_ranges: true }
+    parser = Sift::ValueParser.new(value: ["2026-01-05", "2026-01-15"], type: :date, options: options)
+
+    assert_equal Date.new(2026, 1, 5)..Date.new(2026, 1, 15), parser.parse
+  end
+
+  test "leaves an array untouched without supports_array_ranges" do
+    parser = Sift::ValueParser.new(value: ["2026-01-05", "2026-01-15"], type: :datetime, options: { supports_ranges: true })
+
+    assert_equal ["2026-01-05", "2026-01-15"], parser.parse
+  end
+
   test "parses range for Date string range and normalizes DateTime values" do
     options = {
       supports_ranges: true

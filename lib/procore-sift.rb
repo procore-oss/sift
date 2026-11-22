@@ -10,6 +10,7 @@ require "sift/scope_handler"
 require "sift/where_handler"
 require "sift/validators/valid_int_validator"
 require "sift/validators/valid_date_range_validator"
+require "sift/validators/valid_date_array_range_validator"
 require "sift/validators/valid_json_validator"
 
 module Sift
@@ -66,8 +67,10 @@ module Sift
   end
 
   class_methods do
-    def filter_on(parameter, type:, internal_name: parameter, default: nil, validate: nil, scope_params: [], tap: nil, allow_nil: false)
-      filters << Filter.new(parameter, type, internal_name, default, validate, scope_params, tap, allow_nil: allow_nil)
+    def filter_on(parameter, type:, internal_name: parameter, default: nil, validate: nil, scope_params: [], tap: nil, allow_nil: false,
+                  allow_array_range: false)
+      filters << Filter.new(parameter, type, internal_name, default, validate, scope_params, tap,
+                            allow_nil: allow_nil, allow_array_range: allow_array_range)
     end
 
     def filters

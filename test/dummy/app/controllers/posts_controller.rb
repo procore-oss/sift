@@ -20,6 +20,8 @@ class PostsController < ApplicationController
   filter_on :nullable_priority, type: :int, internal_name: :priority, allow_nil: true
   filter_on :nullable_title, type: :string, internal_name: :title, allow_nil: true
   filter_on :body2, type: :scope, internal_name: :body2, default: ->(c) { c.order(:body) }
+  filter_on :published_within, type: :datetime, internal_name: :published_at, allow_array_range: true
+  filter_on :expiration_within, type: :date, internal_name: :expiration, allow_array_range: true
 
   filter_on :expiration, type: :datetime, tap: ->(value, params) {
     value.split("...").

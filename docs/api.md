@@ -24,6 +24,9 @@ Filters are translated to Active Record `where`s and are chained together. The o
 
 # Array filter (for integer types)
 ?filters[id]=[1,2,3]
+
+# Array date range (for date and datetime filters with allow_array_range: true)
+?filters[published_at][]=2026-01-05&filters[published_at][]=2026-01-15
 ```
 
 ## Sorting

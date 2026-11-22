@@ -1,13 +1,14 @@
 module Sift
   # Value Object that wraps some handling of filter params
   class Parameter
-    attr_reader :param, :type, :internal_name, :allow_nil
+    attr_reader :param, :type, :internal_name, :allow_nil, :allow_array_range
 
-    def initialize(param, type, internal_name = param, allow_nil: false)
+    def initialize(param, type, internal_name = param, allow_nil: false, allow_array_range: false)
       @param = param
       @type = type
       @internal_name = internal_name
       @allow_nil = allow_nil
+      @allow_array_range = allow_array_range
     end
 
     def parse_options
@@ -15,7 +16,8 @@ module Sift
         supports_boolean: supports_boolean?,
         supports_ranges: supports_ranges?,
         supports_json: supports_json?,
-        supports_json_object: supports_json_object?
+        supports_json_object: supports_json_object?,
+        supports_array_ranges: allow_array_range
       }
     end
 

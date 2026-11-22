@@ -93,6 +93,31 @@ The following types support ranges:
 - time
 - datetime
 
+### Array Date Ranges
+
+`date` and `datetime` filters can also accept a two-element array of dates by setting `allow_array_range: true`. This suits APIs whose clients send a date range as an array, for example from a date picker.
+
+```ruby
+class PostsController < ApplicationController
+  include Sift
+
+  filter_on :published_at, type: :datetime, allow_array_range: true
+end
+```
+
+`?filters[published_at][]=2026-01-05&filters[published_at][]=2026-01-15` returns posts published from the start of January 5 through the end of January 15.
+
+With `allow_array_range: true`:
+
+- Each bound is read as a calendar date; any time of day is ignored.
+- A `datetime` range covers whole days in `Time.zone`, from the start of the first day to the end of the last day. To use another zone for a request, wrap the call in `Time.use_zone(zone) { filtrate(collection) }`.
+- A single bound, or a blank end bound, covers that one day.
+- A blank start bound, or more than two bounds, fails validation with `must be a range`. A bound that is not a date fails with `is invalid`.
+- A blank value (`""` or `[]`) leaves the filter unapplied and is not validated.
+- The `start...end` string form is unchanged.
+
+Filters without `allow_array_range: true` still reject arrays for these types.
+
 ## Mutating Filters
 
 Filters can be mutated before the filter is applied using the `tap` argument. This is useful, for example, if you need to adjust the time zone of a `datetime` range filter.

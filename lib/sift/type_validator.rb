@@ -17,10 +17,11 @@ module Sift
                        :scope,
                        :jsonb].freeze
 
-    def initialize(param, type, allow_nil: false)
+    def initialize(param, type, allow_nil: false, allow_array_range: false)
       @param = param
       @type = type
       @allow_nil = allow_nil
+      @allow_array_range = allow_array_range
     end
 
     attr_reader :param, :type
@@ -28,7 +29,7 @@ module Sift
     def validate
       case type
       when :datetime, :date, :time
-        DATETIME_RANGE_PATTERN
+        @allow_array_range ? date_range_or_array_range : DATETIME_RANGE_PATTERN
       when :int
         valid_int?
       when :decimal
@@ -48,6 +49,17 @@ module Sift
 
     def valid_int?
       @allow_nil ? { valid_int: { allow_null_token: true } } : { valid_int: true }
+    end
+
+    def date_range_or_array_range
+      field = param
+      array_value = ->(record) { record.public_send(field).is_a?(Array) }
+      {
+        allow_blank: true,
+        format: DATETIME_RANGE_PATTERN[:format].merge(unless: array_value),
+        valid_date_range: { unless: array_value },
+        valid_date_array_range: { if: array_value }
+      }
     end
   end
 end
